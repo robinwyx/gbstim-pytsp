@@ -5,6 +5,7 @@ import sinter
 
 from gbstim.bposd import BPOSD
 from gbstim.gb import CustomUnpickler
+from time import time
 
 
 def generate_tasks(code, p_range, idle, w, t1, t2):
@@ -25,6 +26,7 @@ def generate_tasks(code, p_range, idle, w, t1, t2):
 
 
 def main():
+    start_time = time()
     parser = argparse.ArgumentParser()
     parser.add_argument("code")
     parser.add_argument("-p", nargs="+", type=float)
@@ -50,7 +52,11 @@ def main():
             )
         },
     )
+    # print the results to results/n-k-d-w-samples.txt
+    with open(f"results/{n}-{k}-{d}-w-{w}-samples.txt", "w") as f:
+        f.write(str(samples))
     pkl.dump(samples, open(f"results/{n}-{k}-{d}-w-{w}-samples.pkl", "wb"))
+    print(f"Time taken: {time() - start_time} seconds")
 
 
 if __name__ == "__main__":
