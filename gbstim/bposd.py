@@ -13,6 +13,9 @@ class CompiledBPTypeDecoder(CompiledDecoder):
 
     def __init__(self, check_matrices, decoder):
         self.check_matrices = check_matrices
+        print("check matrix:")
+        for i in range(len(check_matrices.check_matrix)):
+            print(check_matrices.check_matrix[i])
         self.decoder = decoder
 
     def decode_shots_bit_packed(self, 
