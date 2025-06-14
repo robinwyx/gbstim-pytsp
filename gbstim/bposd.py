@@ -13,7 +13,6 @@ class CompiledBPTypeDecoder(CompiledDecoder):
 
     def __init__(self, check_matrices, decoder):
         self.check_matrices = check_matrices
-        print("check: ", check_matrices.check_matrix)
         self.decoder = decoder
 
     def decode_shots_bit_packed(self, 
@@ -21,6 +20,7 @@ class CompiledBPTypeDecoder(CompiledDecoder):
                                ) -> np.ndarray:
         obs_flip_data = []
         for shot_data in bit_packed_detection_event_data:
+            print("check: ", self.check_matrices.check_matrix)
             unpacked_data = np.unpackbits(shot_data, bitorder='little', count=self.check_matrices.check_matrix.shape[0])
             pred_errors = self.decoder.decode(unpacked_data)
             obs_pred = (self.check_matrices.observables_matrix @ pred_errors) % 2
