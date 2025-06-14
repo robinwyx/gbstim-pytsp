@@ -14,7 +14,7 @@ def generate_tasks(code, p_range, idle, w, t1, t2):
         tasks.append(
             sinter.Task(
                 circuit=code.stim_circ(
-                    p, p, p, t1, t2, dec_type="Z", idle=idle, num_rounds=0
+                    p, p, p, t1, t2, dec_type="Z", idle=idle, num_rounds=1
                 ),
                 json_metadata={
                     "p": p,
