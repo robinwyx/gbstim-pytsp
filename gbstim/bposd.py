@@ -21,6 +21,7 @@ class CompiledBPTypeDecoder(CompiledDecoder):
         obs_flip_data = []
         for shot_data in bit_packed_detection_event_data:
             unpacked_data = np.unpackbits(shot_data, bitorder='little', count=self.check_matrices.check_matrix.shape[0])
+            print("unpacked: ", unpacked_data)
             pred_errors = self.decoder.decode(unpacked_data)
             obs_pred = (self.check_matrices.observables_matrix @ pred_errors) % 2
             obs_flip_data.append(np.packbits(obs_pred, bitorder='little'))
