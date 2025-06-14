@@ -20,8 +20,13 @@ class CompiledBPTypeDecoder(CompiledDecoder):
                                ) -> np.ndarray:
         obs_flip_data = []
         for shot_data in bit_packed_detection_event_data:
-            for i in range(len(self.check_matrices.check_matrix)):
-                print("check ", i, ": ", self.check_matrices.check_matrix[i])
+            matrix = self.check_matrices.check_matrix
+            with open("check_matrix_entries.txt", "w") as f:
+                f.write(str(matrix))  # 输出摘要信息
+                f.write("\n\n[COO format rows, cols, data]:\n")
+                coo = matrix.tocoo()
+                for r, c, v in zip(coo.row, coo.col, coo.data):
+                    f.write(f"({r}, {c})\t{v}\n")
             unpacked_data = np.unpackbits(shot_data, bitorder='little', count=self.check_matrices.check_matrix.shape[0])
             pred_errors = self.decoder.decode(unpacked_data)
             obs_pred = (self.check_matrices.observables_matrix @ pred_errors) % 2
