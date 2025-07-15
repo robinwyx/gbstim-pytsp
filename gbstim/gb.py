@@ -376,6 +376,305 @@ class GBCode:
 
         return ms_perm
 
+    # def stim_circ(
+    #     self,
+    #     gate1_err=0,
+    #     gate2_err=0,
+    #     readout_err=0,
+    #     t1=1e6,
+    #     t2=1e6,
+    #     tr=1e6,
+    #     idle=True,
+    #     dec_type="all",
+    #     num_rounds=1,
+    #     ms_perm=None,
+    #     ms_sched=None,
+    # ):
+    #     """
+    #     args:
+    #         gate1_err: Single qubit gate error rate
+    #         gate2_err: Two qubit gate error rate
+    #         readout_err: Readout error rate
+    #         t1: T1 relaxation time
+    #         t2: T2 relaxation time
+    #         tr: Rydberg state relaxation time
+    #         idle: Include idle errors
+    #         dec_type: Type of decoder to use (X, Z, or all)
+    #         num_rounds: Number of rounds of stabilizers to run
+    #         ms_perm: Movement schedule specification. Defaults to TSP solved movement schedule
+    #                  Manual specification is ugly, but is grouped by 4s. Within each group
+    #                  0: No periodicity, 1: Horizontal periodicity, 2: Vertical periodicity, 3: Both periodicities
+
+    #                  0-3: Z stabilizers for B poly term 0
+    #                  4-7: Z stabilizers for B poly term 1
+    #                  8-11: Z stabilizers for B poly term 2
+    #                  ...
+    #                  12-15: Z stabilizers for A poly term 0
+    #                  16-19: Z stabilizers for A poly term 1
+    #                  20-23: Z stabilizers for A poly term 2
+    #                  ...
+    #                  Repeat for X stabilizers
+
+    #                  The order of these indicies defines the order in which the polynomial terms are ordered
+    #         ms_sched: Absolute ordering of CNOTs for all ancilla, qubit pairs to support arbitrary schedules
+    #     """
+    #     meas_record = []
+    #     data_1_len = len(self.z_ancilla[0].l_data)
+    #     data_2_len = len(self.z_ancilla[0].r_data)
+
+    #     if not ms_sched:
+    #         if not ms_perm:
+    #             req_length = 8 * (len(self.a_poly) + len(self.b_poly))
+    #             ms_perm = self.schedule_movement()
+    #             for i in range(req_length):
+    #                 if i not in ms_perm:
+    #                     ms_perm.append(i)
+    #         ms_sched = {}
+    #         t = 0
+    #         # Z stabilizers
+    #         for i in range(data_1_len):
+    #             for periodicity in range(4):
+    #                 step = (
+    #                     "Z",
+    #                     {
+    #                         periodicity: (
+    #                             "CX",
+    #                             [
+    #                                 (anc.l_data[i][1], anc)
+    #                                 for anc in self.z_ancilla
+    #                                 if anc.l_data[i][0] == periodicity
+    #                             ],
+    #                         )
+    #                     },
+    #                 )
+    #                 sched_time = ms_perm.index(t)
+    #                 ms_sched[sched_time] = step
+    #                 t += 1
+    #         for i in range(data_2_len):
+    #             for periodicity in range(4):
+    #                 step = (
+    #                     "Z",
+    #                     {
+    #                         periodicity: (
+    #                             "CX",
+    #                             [
+    #                                 (anc.r_data[i][1], anc)
+    #                                 for anc in self.z_ancilla
+    #                                 if anc.r_data[i][0] == periodicity
+    #                             ],
+    #                         )
+    #                     },
+    #                 )
+    #                 sched_time = ms_perm.index(t)
+    #                 ms_sched[sched_time] = step
+    #                 t += 1
+    #         # X stabilizers
+    #         for i in range(data_2_len):
+    #             for periodicity in range(4):
+    #                 step = (
+    #                     "X",
+    #                     {
+    #                         periodicity: (
+    #                             "CX",
+    #                             [
+    #                                 (anc, anc.r_data[i][1])
+    #                                 for anc in self.x_ancilla
+    #                                 if anc.r_data[i][0] == periodicity
+    #                             ],
+    #                         )
+    #                     },
+    #                 )
+    #                 sched_time = ms_perm.index(t)
+    #                 ms_sched[sched_time] = step
+    #                 t += 1
+    #         for i in range(data_1_len):
+    #             for periodicity in range(4):
+    #                 step = (
+    #                     "X",
+    #                     {
+    #                         periodicity: (
+    #                             "CX",
+    #                             [
+    #                                 (anc, anc.l_data[i][1])
+    #                                 for anc in self.x_ancilla
+    #                                 if anc.l_data[i][0] == periodicity
+    #                             ],
+    #                         )
+    #                     },
+    #                 )
+    #                 sched_time = ms_perm.index(t)
+    #                 ms_sched[sched_time] = step
+    #                 t += 1
+
+    #         ms_sched = collections.OrderedDict(sorted(ms_sched.items()))
+
+    #     all_ancilla = np.hstack(tuple(self.x_ancilla + self.z_ancilla))
+    #     dec_ancilla = (
+    #         self.x_ancilla
+    #         if dec_type == "X"
+    #         else self.z_ancilla
+    #         if dec_type == "Z"
+    #         else all_ancilla
+    #     )
+    #     all_data = np.hstack(tuple(self.data_1 + self.data_2))
+    #     all_qubits = np.hstack((all_data, all_ancilla))
+
+    #     self.atom_pos = {atom: atom.global_coords for atom in all_qubits}
+
+    #     def apply_idle(circ, t, idle_qubits, rydberg=False):
+    #         if rydberg:
+    #             p_x = 0.25 * (1 - np.exp(-t * 1.0 / tr))
+    #             p_y = p_x
+    #             p_z = 0.5 * (1 - np.exp(-t * 1.0 / tr)) - p_x
+    #             circ.append("PAULI_CHANNEL_1", idle_qubits, (p_x, p_y, p_z))
+    #         else:
+    #             # Idle errors
+    #             p_x = 0.25 * (1 - np.exp(-t * 1.0 / t1))
+    #             p_y = p_x
+    #             p_z = 0.5 * (1 - np.exp(-t * 1.0 / t2)) - p_x
+    #             circ.append("PAULI_CHANNEL_1", idle_qubits, (p_x, p_y, p_z))
+
+    #     def apply_1gate(circ, gate, qubits):
+    #         circ.append(gate, qubits)
+    #         circ.append("DEPOLARIZE1", qubits, gate1_err)
+    #         circ.append("TICK")
+
+    #     def apply_2gate(circ, gate_step, basis):
+    #         err_qubits = []
+    #         shift = None
+    #         for _, (gate, qubit_pairs) in gate_step.items():
+    #             for q1, q2 in qubit_pairs:
+    #                 circ.append(gate, [q1.qbit_id, q2.qbit_id])
+    #                 err_qubits += [q1.qbit_id, q2.qbit_id]
+    #                 anc = q1 if q1 in all_ancilla else q2
+    #                 data = q2 if q1 in all_ancilla else q1
+    #                 new_shift = (
+    #                     self.atom_pos[data][0] - self.atom_pos[anc][0],
+    #                     self.atom_pos[data][1] - self.atom_pos[anc][1],
+    #                 )
+    #                 if not shift:
+    #                     shift = new_shift
+    #                 assert shift == new_shift
+    #         move_time = self.move_atoms(
+    #             [anc for anc in (self.z_ancilla if basis == "Z" else self.x_ancilla)],
+    #             shift,
+    #         )
+    #         self.stab_move_time += move_time
+    #         if len(err_qubits) > 0:
+    #             if idle:
+    #                 apply_idle(circ, move_time, [q.qbit_id for q in all_qubits])
+    #             # cz_gate_time = 0.262 # us
+    #             # apply_idle(circ, cz_gate_time, [q.qbit_id for q in all_qubits], rydberg=True)
+    #             circ.append("DEPOLARIZE2", err_qubits, gate2_err)
+    #             circ.append("TICK")
+
+    #     def meas_qubits(circ, op, qubits, perfect=False):
+    #         if not perfect:
+    #             circ.append("X_ERROR", qubits, readout_err)
+    #         circ.append(op, qubits)
+    #         circ.append("TICK")
+
+    #         # Update measurement record indices
+    #         meas_round = {}
+    #         for i in range(len(qubits)):
+    #             q = qubits[-(i + 1)]
+    #             meas_round[q] = -(i + 1)
+    #         for round in meas_record:
+    #             for q, idx in round.items():
+    #                 round[q] = idx - len(qubits)
+    #         meas_record.append(meas_round)
+
+    #     def get_meas_rec(round_idx, qubit):
+    #         return stim.target_rec(meas_record[round_idx][qubit])
+
+    #     def stabilizer_circ(circ):
+    #         self.stab_move_time = 0
+    #         self.x_pos_history = []
+    #         apply_1gate(circ, "H", [anc.qbit_id for anc in self.x_ancilla])
+
+    #         for _, (basis, gate_step) in ms_sched.items():
+    #             apply_2gate(circ, gate_step, basis)
+
+    #         # Move ancilla back
+    #         self.stab_move_time += self.move_atoms(
+    #             self.z_ancilla,
+    #             (
+    #                 self.z_ancilla[0].coords[0] - self.atom_pos[self.z_ancilla[0]][0],
+    #                 self.z_ancilla[0].coords[1] - self.atom_pos[self.z_ancilla[0]][1],
+    #             ),
+    #         )
+    #         self.stab_move_time += self.move_atoms(
+    #             self.x_ancilla,
+    #             (
+    #                 self.x_ancilla[0].coords[0] - self.atom_pos[self.x_ancilla[0]][0],
+    #                 self.x_ancilla[0].coords[1] - self.atom_pos[self.x_ancilla[0]][1],
+    #             ),
+    #         )
+
+    #         apply_1gate(circ, "H", [anc.qbit_id for anc in self.x_ancilla])
+
+    #         # Readout syndromes
+    #         meas_qubits(circ, "MR", [anc.qbit_id for anc in all_ancilla])
+
+    #     def repeated_stabilizers(circ, repetitions):
+    #         repeat_circ = stim.Circuit()
+    #         stabilizer_circ(repeat_circ)
+    #         for anc in dec_ancilla:
+    #             repeat_circ.append(
+    #                 "DETECTOR",
+    #                 [get_meas_rec(-1, anc.qbit_id), get_meas_rec(-2, anc.qbit_id)],
+    #                 (*anc.global_coords, 0),
+    #             )
+    #         repeat_circ.append("SHIFT_COORDS", [], (0, 0, 1))
+
+    #         circ.append(stim.CircuitRepeatBlock(repetitions, repeat_circ))
+
+    #     circ = stim.Circuit()
+
+    #     # Coords
+    #     for qubit in all_qubits:
+    #         circ.append("QUBIT_COORDS", qubit.qbit_id, qubit.global_coords)
+
+    #     # Reset
+    #     circ.append("R", [qubit.qbit_id for qubit in all_qubits])
+
+    #     # Init Stabilizers
+    #     stabilizer_circ(circ)
+    #     if dec_type != "X":
+    #         for anc in self.z_ancilla:
+    #             circ.append(
+    #                 "DETECTOR", get_meas_rec(-1, anc.qbit_id), (*anc.global_coords, 0)
+    #             )
+    #     circ.append("SHIFT_COORDS", [], (0, 0, 1))
+
+    #     # Stabilizers
+    #     repeated_stabilizers(circ, num_rounds)
+
+    #     # Measure out data
+    #     meas_qubits(circ, "M", [qubit.qbit_id for qubit in all_data], perfect=False)
+
+    #     # Compare data readout with stabilizers
+    #     if dec_type != "X":
+    #         for anc in self.z_ancilla:
+    #             data_rec = [
+    #                 get_meas_rec(-1, data[1].qbit_id) for data in anc.data_qubits
+    #             ]
+    #             circ.append(
+    #                 "DETECTOR",
+    #                 data_rec + [get_meas_rec(-2, anc.qbit_id)],
+    #                 (*anc.global_coords, 0),
+    #             )
+
+    #     # Track logical observables
+    #     for i, lq in enumerate(self.logical_qubits):
+    #         circ.append(
+    #             "OBSERVABLE_INCLUDE",
+    #             [get_meas_rec(-1, data.qbit_id) for data in lq.z_obs],
+    #             i,
+    #         )
+
+    #     return circ
+
     def stim_circ(
         self,
         gate1_err=0,
@@ -536,7 +835,7 @@ class GBCode:
 
         def apply_1gate(circ, gate, qubits):
             circ.append(gate, qubits)
-            circ.append("DEPOLARIZE1", qubits, gate1_err)
+            # circ.append("DEPOLARIZE1", qubits, gate1_err)
             circ.append("TICK")
 
         def apply_2gate(circ, gate_step, basis):
@@ -561,16 +860,16 @@ class GBCode:
             )
             self.stab_move_time += move_time
             if len(err_qubits) > 0:
-                if idle:
-                    apply_idle(circ, move_time, [q.qbit_id for q in all_qubits])
+                # if idle:
+                #     apply_idle(circ, move_time, [q.qbit_id for q in all_qubits])
                 # cz_gate_time = 0.262 # us
                 # apply_idle(circ, cz_gate_time, [q.qbit_id for q in all_qubits], rydberg=True)
-                circ.append("DEPOLARIZE2", err_qubits, gate2_err)
+                # circ.append("DEPOLARIZE2", err_qubits, gate2_err)
                 circ.append("TICK")
 
         def meas_qubits(circ, op, qubits, perfect=False):
-            if not perfect:
-                circ.append("X_ERROR", qubits, readout_err)
+            # if not perfect:
+            #     circ.append("X_ERROR", qubits, readout_err)
             circ.append(op, qubits)
             circ.append("TICK")
 
@@ -590,6 +889,8 @@ class GBCode:
         def stabilizer_circ(circ):
             self.stab_move_time = 0
             self.x_pos_history = []
+            data_qubits = self.data_1 + self.data_2
+            circ.append("DEPOLARIZE1", [data.qbit_id for data in all_data], gate1_err)
             apply_1gate(circ, "H", [anc.qbit_id for anc in self.x_ancilla])
 
             for _, (basis, gate_step) in ms_sched.items():
@@ -674,7 +975,6 @@ class GBCode:
             )
 
         return circ
-
 
 class CustomUnpickler(pickle.Unpickler):
     def find_class(self, module, name):
