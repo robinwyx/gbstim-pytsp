@@ -15,7 +15,7 @@ import sys
 sys.path.append("C:/Users/robin/Desktop/gbstim_pinball")
 
 from gbstim.bposd import BPOSD
-from gbstim.gb import CustomUnpickler
+# from gbstim.gb import CustomUnpickler
 from time import time
 
 import re
